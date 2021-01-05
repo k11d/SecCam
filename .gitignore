@@ -2,3 +2,4 @@ __pycache__/
 .gigignore
 .env
 *.png
+tmp.py

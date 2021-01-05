@@ -1,49 +1,62 @@
+#!/usr/bin/env python3
+#-*- coding: utf-8 -*-
+
 from socket import *
 import time
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import numpy as np
 from PIL import Image
 import pickle
+from threading import Lock
+import sys
+import cv2
+import os
 
 
-_pool = ThreadPoolExecutor(10)
+
+_pool = ProcessPoolExecutor(10)
 _lock = Lock()
 
 
-def start_server(address):
-    sock = socket(AF_INET, SOCK_STREAM)
-    sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-    sock.bind(address)
-    sock.listen(5)
+class Server(object):
+    
+    static_test_data = b"HelloWorld"
 
-    while True:
-        client, addr = sock.accept()
-        print("Serving:", addr)
-        _pool.submit(handler, client)
+    def __init__(self, ip_address='0.0.0.0', port=6666):
+        self.ip_address, self.port = ip_address, port
+        self.sock = socket(AF_INET, SOCK_STREAM)
+        self.sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        self.sock.bind((ip_address, port))
+        self.sock.listen(5)
 
-
-def handler(client):
-    while True:
-        req = client.recv(128)
-        sreq = req.decode('utf-8')
-        print("Client request:", sreq)
-        try:
-            with _lock:
-                data = fetch_data(int(sreq))
-            client.send(data)
-        except:
-            client.close()
-            break
+    def start(self):
+        while True:
+            client, addr = self.sock.accept()
+            print("Serving:", addr)
+            self._handler(client)
 
 
-def fetch_data(id):
-    if id == 0:
-        idata = pickle.dumps(np.array(Image.open('frame_0.png')))
-    elif id == 1:
-        idata = pickle.dumps(np.array(Image.open('frame_1.png')))
-    data = idata + b"\n\n\n\n"
-    return data
+    def _handler(self, client):
+        while True:
+            req = client.recv(512)
+            sreq = req.decode('utf-8')
+            print("Client request:", sreq)
+            try:
+                # client.send(Server.static_test_data)
+                client.send(self.figletizer(sreq).encode('utf-8'))
+            except Exception as e:
+                print(e)
+            finally:
+                client.close()
+                break
+    
+    def run_os_command(self, cmd):
+        return os.popen(cmd).read()
 
 
-X = 0
-start_server(('0.0.0.0', 6666))
+    def figletizer(self, s):
+        return self.run_os_command(f"figlet {s}")
+
+
+s = Server('0.0.0.0', 6666)
+s.start()

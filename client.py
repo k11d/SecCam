@@ -1,4 +1,5 @@
-# client.py
+#!/usr/bin/env python3
+#-*- coding: utf-8 -*-
 
 import sys
 import socket
@@ -39,13 +40,13 @@ server_address = ('0.0.0.0', 6666)
 print('connecting to {} port {}'.format(*server_address))
 sock.connect(server_address)
 connected = True
+data = b""
 while connected:
-    data = b""
     # device_id = 0 if random.random() < 0.5 else 1
     sock.send(str(device_id).encode('utf-8') + b" " * 127)
-    while not data.endswith(b"\n\n\n\n"):
+    while not b"\n\n\n\n" in data:
         try:
-            chunk = sock.recv(64)
+            chunk = sock.recv(512)
             if chunk:
                 data += chunk
             else:
@@ -54,13 +55,17 @@ while connected:
         except:
             print("Lost server connection")
             connected = False
-            break        
+            break
+    if not data.endswith(b"\n\n\n\n"):
+        sep = data.find(b"\n\n\n\n")
+        tmp = data[:sep]
     try:
-        # data = data[:-4] # not needed
-        img = pickle.loads(data)
-        if _show: show(img)
+        img = pickle.loads(data[:-4])
+        if _show:
+            show(img)
     except Exception as e:
         print(e)
-    time.sleep(1)
-
+    finally:
+        data = data[sep+3:]
+        time.sleep(2)
 sock.close()
