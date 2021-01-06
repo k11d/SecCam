@@ -45,4 +45,5 @@ def bgr2hsv(bgr):
 def rgb2hsv(rgb):
     return cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
 
-
+def resize(iar, dims=()):
+    return cv2.resize(iar, dims)

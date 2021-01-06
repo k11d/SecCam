@@ -49,14 +49,16 @@ class Server(object):
             try:
                 # client.send(Server.static_test_data)
                 resp = self.func(sreq)
-                print("Sending response:", len(resp), " bytes")
+                header = b" " * (512 - len(str(len(resp)))) + str(len(resp))
+                print("Sending response header:", len(header), " bytes")
+                client.send(header)
+                print("Sending response data:", len(resp), " bytes")
                 client.send(resp)
             except Exception as e:
                 print(e)
-            finally:
-                print("Done - Closing connection.")
-                client.close()
                 break
+        client.close()
+        
 
 # Example of using the Server class
 class ResponseServer(Server):
