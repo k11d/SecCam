@@ -6,7 +6,8 @@ class ImageProcessing(object):
     toggle_face_detection = False
     toggle_grayscale = False
     toggle_threshold = False
-    threshold_delta = 100
+    threshold_delta = 5
+    threshold_limit = 100
 
     def apply_all(self, frame):
         frame = grayscale(frame) if self.toggle_grayscale else frame

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import cv2
+from .viewer import Viewer
 
 
 class Camera(object):
@@ -32,3 +33,35 @@ class Camera(object):
     def read(self):
         _, frame = self._cap.read()
         return frame
+
+
+class MultiStream(object):
+
+    def __init__(self, *cameras):
+        self.cameras = list(cameras)
+        self.viewer = Viewer(*self.cameras)
+        self.cams_fps = {
+            cam:cam._fps
+            for cam in self.cameras
+        }
+        self.streams = [
+            cam.start_stream()
+            for cam in self.cameras
+        ]
+        self.timings = {
+        }
+
+    def close(self):
+        for cam in self.cameras:
+            cam.close()
+        self.viewer.close()
+
+    def update_cam(self, cam_id):
+        self.viewer.update_cam(cam_id, self.streams[cam_id].__next__())
+
+    def _fetch_all(self):
+        return [[n,self.streams[n].__next__()] for n in range(len(self.cameras))]
+
+    def update_all(self):
+        self.viewer.update_all(*self._fetch_all())
+

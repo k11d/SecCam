@@ -3,19 +3,13 @@
 
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 import time
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import numpy as np
 from PIL import Image
 import pickle
-from threading import Lock
 import sys
 import cv2
 import os
 
-
-
-_pool = ProcessPoolExecutor(10)
-_lock = Lock()
 
 
 
@@ -55,7 +49,7 @@ class Server(object):
             try:
                 # client.send(Server.static_test_data)
                 resp = self.func(sreq)
-                print("Sending response:", resp)
+                print("Sending response:", len(resp), " bytes")
                 client.send(resp)
             except Exception as e:
                 print(e)
@@ -64,14 +58,15 @@ class Server(object):
                 client.close()
                 break
 
-
+# Example of using the Server class
 class ResponseServer(Server):
     def run_os_command(self, cmd):
         return os.popen(cmd).read()
 
-    def func(self, s):
-        return self.run_os_command(f'figlet "{s}"').encode('utf-8')
+    def func(self, sreq):
+        return self.run_os_command(f'figlet "{sreq}"').encode('utf-8')
 
 
-s = ResponseServer('0.0.0.0', 6666)
-s.start()
+if __name__ == '__main__':
+    s = ResponseServer('0.0.0.0', 6666)
+    s.start()
