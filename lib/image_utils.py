@@ -26,8 +26,9 @@ def draw_rect(img, rect):
     cv2.rectangle(img, (l, t), (r, b), (0,0,255), 2)
 
 
-def threshold(gray, x=125):
-    bal = np.mean(gray)
+def threshold(gray, bal=None):
+    if bal is None:
+        bal = np.mean(gray)
     low_m = gray < bal
     high_m = gray > bal
     ret = np.copy(gray)
